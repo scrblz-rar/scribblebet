@@ -2,60 +2,43 @@
 <html>
 
 <head>
-
 <title>scribble.bet</title>
-
 <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
 
 <h1>scribble.bet</h1>
 
-<!-- UPGRADE SCREEN -->
-
 <div id="upgradeScreen">
 
-<h2>Upgrade Your Ball</h2>
+<h2>Upgrade</h2>
 
 <div id="moneyDisplay"></div>
-
-<label>Weapon:</label>
 
 <select id="weaponSelect"></select>
 
 <br><br>
 
-<button onclick="goToFight()">
-Go To Fight
-</button>
+<button onclick="goToFight()">Fight</button>
 
 </div>
 
-<!-- FIGHT SCREEN -->
-
 <div id="fightScreen" class="hidden">
 
-<h2>Fight Arena</h2>
-
-<label>Bet Amount:</label>
+<h2>Fight</h2>
 
 <input id="betInput" value="50">
 
-<button onclick="startFight()">
-Start Fight
-</button>
+<button onclick="startFight()">Start</button>
 
 <br><br>
 
-<canvas id="arena" width="700" height="450"></canvas>
+<canvas id="arena" width="800" height="500"></canvas>
 
 <br>
 
-<button onclick="returnToUpgrade()">
-Back To Upgrades
-</button>
+<button onclick="returnToUpgrade()">Back</button>
 
 </div>
 
