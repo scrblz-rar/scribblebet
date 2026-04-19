@@ -1,21 +1,12 @@
 body {
-
 background: white;
-
-color: black;
-
-font-family: Arial;
-
 text-align: center;
-
+font-family: Arial;
 }
 
 canvas {
-
 background: white;
-
 border: 2px solid black;
-
 }
 
 .hidden {
@@ -23,21 +14,8 @@ display: none;
 }
 
 button {
-
 background: black;
-
 color: white;
-
 padding: 10px;
-
 margin: 5px;
-
-border: none;
-
-cursor: pointer;
-
-}
-
-select, input {
-padding: 5px;
 }
