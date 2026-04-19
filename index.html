@@ -3,7 +3,6 @@
 <head>
 <title>scribble.bet</title>
 
-<!-- FONT -->
 <link href="https://fonts.googleapis.com/css2?family=Lexend+Giga&display=swap" rel="stylesheet">
 
 <style>
@@ -17,7 +16,7 @@ body {
     padding-top:30px;
 }
 
-/* 🌐 FIXED SEAMLESS BACKGROUND */
+/* BACKGROUND */
 body::before {
     content:"";
     position:fixed;
@@ -38,7 +37,7 @@ body::before {
     100% { transform: translate3d(-80px,-80px,0); }
 }
 
-/* 📺 CASINO TICKER */
+/* TICKER */
 #ticker {
     position:fixed;
     top:0;
@@ -97,6 +96,17 @@ button:hover {
     background:black;
     color:white;
     border-radius:6px;
+
+    transform: translateY(-15px) scale(0.9);
+    opacity:0;
+    animation: deal .25s ease forwards;
+}
+
+@keyframes deal {
+    to {
+        transform: translateY(0) scale(1);
+        opacity:1;
+    }
 }
 
 /* FEED */
@@ -109,6 +119,7 @@ button:hover {
     margin-top:10px;
     padding-top:10px;
 }
+
 .feedItem { margin:3px 0; opacity:0.8; }
 
 .coin { font-size:40px; }
@@ -123,7 +134,7 @@ button:hover {
 
 <body>
 
-<!-- 📺 TICKER -->
+<!-- TICKER -->
 <div id="ticker">
     <span id="tickerText">🎰 scribble.bet live casino • blackjack tables open • poker running • coin flips active • good luck gamblers 🎲</span>
 </div>
@@ -154,31 +165,41 @@ button:hover {
 <div class="box">
 <h3>Blackjack</h3>
 <input id="bet2" type="number"><br>
+
 <button onclick="startBJ()">Deal</button>
 <button onclick="hit()">Hit</button>
 <button onclick="stand()">Stand</button>
 
+<p>Player:</p>
+<div id="playerCards"></div>
+
+<p>Dealer:</p>
+<div id="dealerCards"></div>
+
 <p id="bjRes"></p>
 </div>
 
-<!-- POKER -->
-<div class="box">
-<h3>Poker (Raise System)</h3>
-<input id="bet3" type="number"><br>
-
-<button onclick="dealPoker()">Deal</button>
-<button onclick="pokerHit()">Hit (Draw)</button>
-<button onclick="raise()">Raise</button>
-<button onclick="standPoker()">Stand</button>
-<button onclick="fold()">Fold</button>
-
-<p>You:</p>
-<div id="pHand"></div>
-
-<p>AI:</p>
-<div id="aHand"></div>
-
-<p id="pokerRes"></p>
+<!-- POPUP -->
+<div id="bjPopup" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+<div style="
+background:white;
+padding:20px;
+border:2px solid black;
+border-radius:10px;
+font-size:18px;
+">
+<div id="bjPopupText"></div>
+<br>
+<button onclick="document.getElementById('bjPopup').style.display='none'">OK</button>
+</div>
 </div>
 
 <script>
@@ -188,20 +209,17 @@ document.getElementById("name").innerText = username;
 let player = JSON.parse(localStorage.getItem("p_"+username)) || {points:1000};
 let feed = JSON.parse(localStorage.getItem("feed")||"[]");
 
-/* SAVE */
 function save(){
     localStorage.setItem("p_"+username, JSON.stringify(player));
     localStorage.setItem("feed", JSON.stringify(feed));
 }
 
-/* UPDATE */
 function update(){
     document.getElementById("points").innerText = player.points;
     renderFeed();
     save();
 }
 
-/* FEED */
 function addFeed(msg){
     feed.unshift(msg);
     feed = feed.slice(0,15);
@@ -219,15 +237,14 @@ function renderFeed(){
     });
 }
 
-/* TICKER (LIVE) */
+/* TICKER */
 function updateTicker(){
     let msgs = [
-        "🎰 High stakes blackjack running",
-        "🃏 Poker table heating up",
-        "💰 Big win detected in lobby",
-        "🎲 Coin flip streak active",
-        "🔥 Players pushing all-in",
-        "📈 Casino economy rising"
+        "🎰 Blackjack tables hot",
+        "🃏 Poker action rising",
+        "💰 Big win detected",
+        "🎲 Coin flip streak",
+        "🔥 All-in moments",
     ];
     document.getElementById("tickerText").innerText =
         msgs[Math.floor(Math.random()*msgs.length)];
@@ -263,22 +280,38 @@ let bj={};
 function card(){ return Math.floor(Math.random()*10)+1; }
 function sum(a){ return a.reduce((x,y)=>x+y,0); }
 
+function showBJ(){
+    document.getElementById("playerCards").innerHTML =
+        bj.player.map(x=>`<div class="card">${x}</div>`).join("");
+
+    document.getElementById("dealerCards").innerHTML =
+        bj.dealer.map(x=>`<div class="card">${x}</div>`).join("");
+}
+
+function popup(text){
+    document.getElementById("bjPopupText").innerText=text;
+    document.getElementById("bjPopup").style.display="flex";
+}
+
 function startBJ(){
     let bet=+bet2.value;
     if(bet>player.points) return;
 
     bj={bet,player:[card(),card()],dealer:[card(),card()],active:true};
+    showBJ();
     document.getElementById("bjRes").innerText="";
 }
 
 function hit(){
     if(!bj.active) return;
+
     bj.player.push(card());
+    showBJ();
 
     if(sum(bj.player)>21){
         player.points-=bj.bet;
         bj.active=false;
-        document.getElementById("bjRes").innerText="Bust";
+        popup("💥 You Lost $" + bj.bet);
         update();
     }
 }
@@ -288,6 +321,7 @@ function stand(){
 
     while(sum(bj.dealer)<17){
         bj.dealer.push(card());
+        showBJ();
     }
 
     let p=sum(bj.player), d=sum(bj.dealer);
@@ -295,80 +329,13 @@ function stand(){
     if(d>21 || p>d){
         player.points+=bj.bet;
         addFeed(username+" won "+bj.bet+" on blackjack");
-        document.getElementById("bjRes").innerText="Win";
+        popup("🎉 You Won $" + bj.bet);
     } else {
         player.points-=bj.bet;
-        document.getElementById("bjRes").innerText="Lose";
+        popup("💀 You Lost $" + bj.bet);
     }
 
     bj.active=false;
-    update();
-}
-
-/* POKER */
-let poker={};
-
-function hand(){
-    return [card(),card(),card(),card(),card()];
-}
-
-function val(h){
-    return h.reduce((a,b)=>a+b,0);
-}
-
-function show(id,h){
-    document.getElementById(id).innerHTML =
-        h.map(x=>`<div class="card">${x}</div>`).join("");
-}
-
-function dealPoker(){
-    let bet=+bet3.value;
-    if(bet>player.points) return;
-
-    poker={bet,p:hand(),ai:hand(),active:true};
-
-    show("pHand",poker.p);
-    show("aHand",poker.ai);
-    document.getElementById("pokerRes").innerText="";
-}
-
-function pokerHit(){
-    if(!poker.active) return;
-    let i=Math.floor(Math.random()*poker.p.length);
-    poker.p[i]=card();
-    show("pHand",poker.p);
-}
-
-function raise(){
-    if(!poker.active) return;
-    poker.bet += 10;
-}
-
-function standPoker(){
-    if(!poker.active) return;
-
-    let p=val(poker.p);
-    let a=val(poker.ai);
-
-    if(p>a){
-        player.points+=poker.bet;
-        addFeed(username+" won "+poker.bet+" on poker");
-        document.getElementById("pokerRes").innerText="Win";
-    } else {
-        player.points-=poker.bet;
-        document.getElementById("pokerRes").innerText="Lose";
-    }
-
-    poker.active=false;
-    update();
-}
-
-function fold(){
-    if(!poker.active) return;
-
-    player.points-=poker.bet;
-    poker.active=false;
-    document.getElementById("pokerRes").innerText="Folded";
     update();
 }
 
