@@ -1,58 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>RNG LAB X</title>
+<title>scribble.bet</title>
+
+<!-- FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Lexend+Giga&display=swap" rel="stylesheet">
 
 <style>
 body {
     margin:0;
-    font-family:Arial;
-    color:white;
+    font-family:'Lexend Giga', sans-serif;
+    color:black;
     text-align:center;
-    background:black;
+    background:white;
     overflow-x:hidden;
+    padding-top:30px;
 }
 
-/* 🔥 NEON DIAGONAL BACKGROUND */
+/* 🌐 FIXED SEAMLESS BACKGROUND */
 body::before {
     content:"";
     position:fixed;
-    width:200%;
-    height:200%;
-    background: repeating-linear-gradient(
+    inset:0;
+    background-image: repeating-linear-gradient(
         135deg,
-        rgba(255,255,255,0.05) 0px,
-        rgba(255,255,255,0.05) 20px,
-        transparent 20px,
+        rgba(0,0,0,0.04) 0px,
+        rgba(0,0,0,0.04) 18px,
+        transparent 18px,
         transparent 40px
     );
-    animation:bgmove 6s linear infinite;
+    animation:bgmove 40s linear infinite;
+    z-index:-1;
 }
 
 @keyframes bgmove {
-    from { transform:translate(-50%,-50%); }
-    to { transform:translate(0,0); }
+    0% { transform: translate3d(0,0,0); }
+    100% { transform: translate3d(-80px,-80px,0); }
+}
+
+/* 📺 CASINO TICKER */
+#ticker {
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    background:black;
+    color:white;
+    font-size:12px;
+    padding:6px 0;
+    overflow:hidden;
+    white-space:nowrap;
+    z-index:999;
+}
+
+#ticker span {
+    display:inline-block;
+    padding-left:100%;
+    animation:tickerMove 18s linear infinite;
+}
+
+@keyframes tickerMove {
+    0% { transform:translateX(0); }
+    100% { transform:translateX(-100%); }
 }
 
 /* UI */
 .box {
-    background:rgba(0,0,0,0.8);
-    border:1px solid white;
+    background:rgba(255,255,255,0.95);
+    border:1px solid black;
     margin:15px auto;
     padding:15px;
-    width:340px;
-    box-shadow:0 0 10px white;
+    width:360px;
+    box-shadow:0 0 10px rgba(0,0,0,0.2);
+    border-radius:10px;
 }
 
 /* BUTTONS */
 button {
-    background:black;
-    color:white;
-    border:1px solid white;
-    box-shadow:0 0 5px white;
+    background:white;
+    color:black;
+    border:1px solid black;
+    cursor:pointer;
+    font-family:inherit;
 }
 button:hover {
-    box-shadow:0 0 15px white;
+    box-shadow:0 0 8px rgba(0,0,0,0.4);
 }
 
 /* CARDS */
@@ -62,175 +94,149 @@ button:hover {
     height:70px;
     line-height:70px;
     margin:4px;
-    background:white;
-    color:black;
+    background:black;
+    color:white;
     border-radius:6px;
-    animation:pop .2s;
 }
-@keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
 
-/* COIN */
-.coin {
-    font-size:50px;
+/* FEED */
+#feed {
+    font-size:12px;
+    text-align:left;
+    max-height:120px;
+    overflow:auto;
+    border-top:1px solid #ccc;
+    margin-top:10px;
+    padding-top:10px;
 }
-.spin {
-    animation:spin .6s;
-}
+.feedItem { margin:3px 0; opacity:0.8; }
+
+.coin { font-size:40px; }
+.spin { animation:spin .6s; }
+
 @keyframes spin {
     from{transform:rotateY(0)}
     to{transform:rotateY(720deg)}
 }
-
-#game { display:none; }
 </style>
 </head>
 
 <body>
 
-<h1>⚡ RNG LAB X ⚡</h1>
+<!-- 📺 TICKER -->
+<div id="ticker">
+    <span id="tickerText">🎰 scribble.bet live casino • blackjack tables open • poker running • coin flips active • good luck gamblers 🎲</span>
+</div>
 
-<input id="username" placeholder="Username">
-<button onclick="join()">Join</button>
-<p id="status"></p>
-
-<div id="game">
+<h1>🖊 scribble.bet</h1>
 
 <div class="box">
-<h2>Stats</h2>
+<p>Player: <span id="name"></span></p>
 <p>Points: <span id="points"></span></p>
+</div>
+
+<!-- FEED -->
+<div class="box">
+<h3>Live Wins Feed</h3>
+<div id="feed"></div>
 </div>
 
 <!-- COIN -->
 <div class="box">
-<h2>Coin Flip</h2>
+<h3>Coin Flip</h3>
 <input id="bet1" type="number">
 <div id="coin" class="coin">🪙</div><br>
 <button onclick="coin('heads')">Heads</button>
 <button onclick="coin('tails')">Tails</button>
-<p id="coinResult"></p>
 </div>
 
 <!-- BLACKJACK -->
 <div class="box">
-<h2>Blackjack</h2>
+<h3>Blackjack</h3>
 <input id="bet2" type="number"><br>
 <button onclick="startBJ()">Deal</button>
 <button onclick="hit()">Hit</button>
 <button onclick="stand()">Stand</button>
 
-<p>You:</p>
-<div id="pCards"></div>
-
-<p>Dealer:</p>
-<div id="dCards"></div>
-
-<p id="bjResult"></p>
+<p id="bjRes"></p>
 </div>
 
 <!-- POKER -->
 <div class="box">
-<h2>Poker</h2>
+<h3>Poker (Raise System)</h3>
 <input id="bet3" type="number"><br>
-<button onclick="playPoker()">Play</button>
+
+<button onclick="dealPoker()">Deal</button>
+<button onclick="pokerHit()">Hit (Draw)</button>
+<button onclick="raise()">Raise</button>
+<button onclick="standPoker()">Stand</button>
+<button onclick="fold()">Fold</button>
 
 <p>You:</p>
-<div id="pokerP"></div>
+<div id="pHand"></div>
 
 <p>AI:</p>
-<div id="pokerAI"></div>
+<div id="aHand"></div>
 
-<p id="pokerResult"></p>
-</div>
-
-<!-- LEADERBOARD -->
-<div class="box">
-<h2>Global Leaderboard</h2>
-<ul id="board"></ul>
-</div>
-
+<p id="pokerRes"></p>
 </div>
 
 <script>
-let player, username;
-let bj = {active:false, player:[], dealer:[], bet:0};
+let username = "scribbler_" + Math.floor(Math.random()*9999);
+document.getElementById("name").innerText = username;
 
-/* LOGIN FIXED */
-function join(){
-    username = document.getElementById("username").value.trim();
-    if(!username) return status("Enter username");
+let player = JSON.parse(localStorage.getItem("p_"+username)) || {points:1000};
+let feed = JSON.parse(localStorage.getItem("feed")||"[]");
 
-    try {
-        let data = localStorage.getItem("p_"+username);
-        player = data ? JSON.parse(data) : {points:1000};
-    } catch {
-        player = {points:1000};
-    }
-
-    if(player.points<=0){
-        status("Banned (0 points)");
-        return;
-    }
-
-    document.getElementById("game").style.display="block";
-    status("Logged in as "+username);
-    update();
-}
-
-function status(t){ document.getElementById("status").innerText=t; }
-
-/* SAVE + "GLOBAL" */
-async function save(){
+/* SAVE */
+function save(){
     localStorage.setItem("p_"+username, JSON.stringify(player));
-
-    // FAKE API POST (won’t error if offline)
-    try {
-        await fetch("https://jsonplaceholder.typicode.com/posts", {
-            method:"POST",
-            body:JSON.stringify({name:username,points:player.points}),
-            headers:{"Content-Type":"application/json"}
-        });
-    } catch {}
-
-    updateBoard();
+    localStorage.setItem("feed", JSON.stringify(feed));
 }
 
+/* UPDATE */
 function update(){
-    document.getElementById("points").innerText=player.points;
+    document.getElementById("points").innerText = player.points;
+    renderFeed();
     save();
 }
 
-/* LEADERBOARD */
-function updateBoard(){
-    let b = JSON.parse(localStorage.getItem("board")||"[]");
+/* FEED */
+function addFeed(msg){
+    feed.unshift(msg);
+    feed = feed.slice(0,15);
+    renderFeed();
+}
 
-    b = b.filter(x=>x.name!==username);
-    b.push({name:username,points:player.points});
-
-    // add fake global players
-    while(b.length<8){
-        b.push({
-            name:"User"+Math.floor(Math.random()*9999),
-            points:Math.floor(Math.random()*3000)
-        });
-    }
-
-    b.sort((a,b)=>b.points-a.points);
-    b=b.slice(0,10);
-
-    localStorage.setItem("board", JSON.stringify(b));
-
-    let ul=document.getElementById("board");
-    ul.innerHTML="";
-    b.forEach(p=>{
-        let li=document.createElement("li");
-        li.innerText=p.name+" - "+p.points;
-        ul.appendChild(li);
+function renderFeed(){
+    let f=document.getElementById("feed");
+    f.innerHTML="";
+    feed.forEach(x=>{
+        let d=document.createElement("div");
+        d.className="feedItem";
+        d.innerText=x;
+        f.appendChild(d);
     });
 }
 
+/* TICKER (LIVE) */
+function updateTicker(){
+    let msgs = [
+        "🎰 High stakes blackjack running",
+        "🃏 Poker table heating up",
+        "💰 Big win detected in lobby",
+        "🎲 Coin flip streak active",
+        "🔥 Players pushing all-in",
+        "📈 Casino economy rising"
+    ];
+    document.getElementById("tickerText").innerText =
+        msgs[Math.floor(Math.random()*msgs.length)];
+}
+setInterval(updateTicker, 5000);
+
 /* COIN */
 function coin(choice){
-    let bet = +document.getElementById("bet1").value;
+    let bet=+bet1.value;
     if(bet>player.points) return;
 
     let c=document.getElementById("coin");
@@ -238,45 +244,42 @@ function coin(choice){
 
     setTimeout(()=>{
         c.classList.remove("spin");
-
         let r=Math.random()<0.5?"heads":"tails";
-        c.innerText = r==="heads"?"🙂":"🪙";
 
-        if(r===choice) player.points+=bet;
-        else player.points-=bet;
+        if(r===choice){
+            player.points+=bet;
+            addFeed(username+" won "+bet+" on coin flip");
+        } else {
+            player.points-=bet;
+        }
 
-        document.getElementById("coinResult").innerText=r;
-        end();
+        update();
     },600);
 }
 
 /* BLACKJACK */
+let bj={};
+
 function card(){ return Math.floor(Math.random()*10)+1; }
-function show(id,arr){
-    document.getElementById(id).innerHTML =
-        arr.map(x=>`<div class="card">${x}</div>`).join("");
-}
 function sum(a){ return a.reduce((x,y)=>x+y,0); }
 
 function startBJ(){
-    let bet = +document.getElementById("bet2").value;
+    let bet=+bet2.value;
     if(bet>player.points) return;
 
-    bj={active:true,bet,player:[card(),card()],dealer:[card(),card()]};
-    show("pCards",bj.player);
-    show("dCards",[bj.dealer[0]]);
+    bj={bet,player:[card(),card()],dealer:[card(),card()],active:true};
+    document.getElementById("bjRes").innerText="";
 }
 
 function hit(){
     if(!bj.active) return;
     bj.player.push(card());
-    show("pCards",bj.player);
 
     if(sum(bj.player)>21){
         player.points-=bj.bet;
         bj.active=false;
-        document.getElementById("bjResult").innerText="Bust!";
-        end();
+        document.getElementById("bjRes").innerText="Bust";
+        update();
     }
 }
 
@@ -287,70 +290,89 @@ function stand(){
         bj.dealer.push(card());
     }
 
-    show("dCards",bj.dealer);
-
     let p=sum(bj.player), d=sum(bj.dealer);
 
     if(d>21 || p>d){
         player.points+=bj.bet;
-        document.getElementById("bjResult").innerText="Win";
+        addFeed(username+" won "+bj.bet+" on blackjack");
+        document.getElementById("bjRes").innerText="Win";
     } else {
         player.points-=bj.bet;
-        document.getElementById("bjResult").innerText="Lose";
+        document.getElementById("bjRes").innerText="Lose";
     }
 
     bj.active=false;
-    end();
-}
-
-/* POKER (REAL HAND RANKING LIGHT) */
-function handValue(hand){
-    let counts={};
-    hand.forEach(c=>counts[c]=(counts[c]||0)+1);
-
-    let values=Object.values(counts).sort((a,b)=>b-a);
-
-    if(values[0]===4) return 7;
-    if(values[0]===3 && values[1]===2) return 6;
-    if(values[0]===3) return 3;
-    if(values[0]===2 && values[1]===2) return 2;
-    if(values[0]===2) return 1;
-    return 0;
-}
-
-function playPoker(){
-    let bet = +document.getElementById("bet3").value;
-    if(bet>player.points) return;
-
-    let p=[card(),card(),card(),card(),card()];
-    let ai=[card(),card(),card(),card(),card()];
-
-    show("pokerP",p);
-    show("pokerAI",ai);
-
-    let pv=handValue(p);
-    let av=handValue(ai);
-
-    if(pv>av){
-        player.points+=bet;
-        document.getElementById("pokerResult").innerText="Win";
-    } else {
-        player.points-=bet;
-        document.getElementById("pokerResult").innerText="Lose";
-    }
-
-    end();
-}
-
-/* END */
-function end(){
-    if(player.points<=0){
-        player.points=0;
-        status("Banned");
-        document.getElementById("game").style.display="none";
-    }
     update();
 }
+
+/* POKER */
+let poker={};
+
+function hand(){
+    return [card(),card(),card(),card(),card()];
+}
+
+function val(h){
+    return h.reduce((a,b)=>a+b,0);
+}
+
+function show(id,h){
+    document.getElementById(id).innerHTML =
+        h.map(x=>`<div class="card">${x}</div>`).join("");
+}
+
+function dealPoker(){
+    let bet=+bet3.value;
+    if(bet>player.points) return;
+
+    poker={bet,p:hand(),ai:hand(),active:true};
+
+    show("pHand",poker.p);
+    show("aHand",poker.ai);
+    document.getElementById("pokerRes").innerText="";
+}
+
+function pokerHit(){
+    if(!poker.active) return;
+    let i=Math.floor(Math.random()*poker.p.length);
+    poker.p[i]=card();
+    show("pHand",poker.p);
+}
+
+function raise(){
+    if(!poker.active) return;
+    poker.bet += 10;
+}
+
+function standPoker(){
+    if(!poker.active) return;
+
+    let p=val(poker.p);
+    let a=val(poker.ai);
+
+    if(p>a){
+        player.points+=poker.bet;
+        addFeed(username+" won "+poker.bet+" on poker");
+        document.getElementById("pokerRes").innerText="Win";
+    } else {
+        player.points-=poker.bet;
+        document.getElementById("pokerRes").innerText="Lose";
+    }
+
+    poker.active=false;
+    update();
+}
+
+function fold(){
+    if(!poker.active) return;
+
+    player.points-=poker.bet;
+    poker.active=false;
+    document.getElementById("pokerRes").innerText="Folded";
+    update();
+}
+
+update();
 </script>
 
 </body>
