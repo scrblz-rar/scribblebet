@@ -1,76 +1,50 @@
 body {
-    margin:0;
-    font-family:'Lexend Giga', sans-serif;
-    background:white;
-    color:black;
-    text-align:center;
-    padding-top:40px;
-    overflow-x:hidden;
+
+background: #111;
+color: white;
+
+text-align: center;
+
+font-family: Arial;
+
 }
 
-/* background */
-body::before {
-    content:"";
-    position:fixed;
-    inset:0;
-    background: repeating-linear-gradient(
-        135deg,
-        rgba(0,0,0,0.04) 0px,
-        rgba(0,0,0,0.04) 18px,
-        transparent 18px,
-        transparent 40px
-    );
-    animation:bg 40s linear infinite;
-    z-index:-1;
+canvas {
+
+background: #000;
+
+border: 2px solid white;
+
 }
 
-@keyframes bg {
-    0% {transform:translate(0,0);}
-    100% {transform:translate(-80px,-80px);}
-}
+.hidden {
 
-.box {
-    width:360px;
-    margin:15px auto;
-    padding:15px;
-    border:1px solid black;
-    border-radius:10px;
-    background:rgba(255,255,255,0.95);
+display: none;
+
 }
 
 button {
-    background:white;
-    border:1px solid black;
-    cursor:pointer;
+
+padding: 10px;
+
+margin: 5px;
+
+background: #00ffaa;
+
+border: none;
+
+cursor: pointer;
+
 }
 
-#log {
-    font-size:12px;
-    text-align:left;
-    max-height:120px;
-    overflow:auto;
+button:hover {
+
+background: #00cc88;
+
 }
 
-/* ticker */
-#ticker {
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    background:black;
-    color:white;
-    font-size:12px;
-    padding:5px;
-    overflow:hidden;
-}
+select {
 
-#ticker span {
-    display:inline-block;
-    padding-left:100%;
-    animation:scroll 18s linear infinite;
-}
+padding: 5px;
 
-@keyframes scroll {
-    0% {transform:translateX(0);}
-    100% {transform:translateX(-100%);}
 }
