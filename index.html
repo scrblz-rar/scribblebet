@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <title>scribble.bet</title>
 <link rel="stylesheet" href="style.css">
@@ -14,36 +13,33 @@
 
 <h2>Upgrade</h2>
 
-<div id="moneyDisplay"></div>
+<div id="money"></div>
 
-<select id="weaponSelect"></select>
+<select id="weapon"></select>
 
 <br><br>
 
-<button onclick="goToFight()">Fight</button>
+<button onclick="startFight()">FIGHT</button>
 
 </div>
 
 <div id="fightScreen" class="hidden">
 
-<h2>Fight</h2>
+<input id="bet" value="50">
 
-<input id="betInput" value="50">
-
-<button onclick="startFight()">Start</button>
+<button onclick="beginFight()">Start Fight</button>
 
 <br><br>
 
-<canvas id="arena" width="800" height="500"></canvas>
+<canvas id="c" width="800" height="450"></canvas>
 
 <br>
 
-<button onclick="returnToUpgrade()">Back</button>
+<button onclick="back()">Back</button>
 
 </div>
 
 <script src="game.js"></script>
 
 </body>
-
 </html>
