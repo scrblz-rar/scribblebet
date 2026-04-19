@@ -1,270 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>scribble.bet</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Lexend+Giga&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 
-<style>
-body{
-    margin:0;
-    font-family:'Lexend Giga',sans-serif;
-    background:white;
-    color:black;
-    text-align:center;
-    padding-top:20px;
-    overflow-x:hidden;
-}
-
-/* background */
-body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    background:repeating-linear-gradient(
-        135deg,
-        rgba(0,0,0,0.04) 0px,
-        rgba(0,0,0,0.04) 18px,
-        transparent 18px,
-        transparent 40px
-    );
-    animation:bg 40s linear infinite;
-    z-index:-1;
-}
-
-@keyframes bg{
-    0%{transform:translate(0,0)}
-    100%{transform:translate(-80px,-80px)}
-}
-
-.box{
-    width:360px;
-    margin:15px auto;
-    border:1px solid black;
-    padding:10px;
-    border-radius:10px;
-    background:rgba(255,255,255,0.95);
-}
-
-/* cards */
-.card{
-    display:inline-block;
-    width:45px;
-    height:65px;
-    line-height:65px;
-    background:black;
-    color:white;
-    margin:3px;
-    border-radius:6px;
-    transform:translateY(0);
-    animation:deal .2s ease-out;
-}
-
-@keyframes deal{
-    from{transform:translateY(-20px);opacity:0}
-    to{transform:translateY(0);opacity:1}
-}
-
-/* coin */
-.coin{
-    font-size:50px;
-}
-.spin{
-    animation:spin .6s;
-}
-@keyframes spin{
-    from{transform:rotateY(0)}
-    to{transform:rotateY(720deg)}
-}
-
-/* buttons */
-button{
-    background:white;
-    border:1px solid black;
-    cursor:pointer;
-}
-button:hover{box-shadow:0 0 8px rgba(0,0,0,0.3)}
-</style>
 </head>
 
 <body>
 
-<h1>🎰 scribble.bet</h1>
+<h1>scribble.bet</h1>
 
-<div class="box">
-Money: <span id="money">100</span><br>
-Luck: <span id="luck">1</span><br>
-Multiplier: <span id="multi">1</span>
+<!-- UPGRADE SCREEN -->
+
+<div id="upgradeScreen">
+
+<h2>Upgrade Your Ball</h2>
+
+<div id="moneyDisplay"></div>
+
+<label>Weapon:</label>
+
+<select id="weaponSelect"></select>
+
+<br><br>
+
+<button onclick="buyUpgrade('hp')">
++20 HP ($50)
+</button>
+
+<button onclick="buyUpgrade('damage')">
++5 Damage ($75)
+</button>
+
+<br><br>
+
+<button onclick="goToFight()">
+Go To Fight
+</button>
+
 </div>
 
-<!-- COIN -->
-<div class="box">
-<h3>Coin Flip</h3>
-<input id="bet1" type="number">
-<div id="coin" class="coin">🪙</div>
+<!-- FIGHT SCREEN -->
+
+<div id="fightScreen" class="hidden">
+
+<h2>Fight Arena</h2>
+
+<label>Bet Amount:</label>
+
+<input id="betInput" value="50">
+
+<button onclick="startFight()">
+Start Fight
+</button>
+
+<br><br>
+
+<canvas id="arena" width="600" height="400"></canvas>
+
 <br>
-<button onclick="coin('heads')">Heads</button>
-<button onclick="coin('tails')">Tails</button>
+
+<button onclick="returnToUpgrade()">
+Back To Upgrades
+</button>
+
 </div>
 
-<!-- BLACKJACK -->
-<div class="box">
-<h3>Blackjack</h3>
-<input id="bet2" type="number"><br>
-<button onclick="bjDeal()">Deal</button>
-<button onclick="bjHit()">Hit</button>
-<button onclick="bjStand()">Stand</button>
-<div id="bj"></div>
-</div>
-
-<!-- POKER -->
-<div class="box">
-<h3>Texas Hold’em vs AI</h3>
-<input id="bet3" type="number"><br>
-<button onclick="pokerDeal()">Deal</button>
-<button onclick="pokerDraw()">Draw</button>
-<button onclick="pokerFold()">Fold</button>
-<div id="phand"></div>
-<div id="aiphand"></div>
-<div id="pokerRes"></div>
-</div>
-
-<!-- BALL BATTLE -->
-<div class="box">
-<h3>AI Ball Battle</h3>
-<button onclick="startBattle()">Start Fight Bet</button>
-<canvas id="c" width="300" height="200" style="border:1px solid black"></canvas>
-</div>
-
-<script>
-/* CORE */
-let money=100,luck=1,multi=1;
-
-function update(){
-moneyEl.innerText=money;
-luckEl.innerText=luck;
-multiEl.innerText=multi;
-}
-
-/* COIN */
-function coin(c){
-let bet=+bet1.value;
-if(bet>money) return;
-
-coinEl.classList.add("spin");
-
-setTimeout(()=>{
-coinEl.classList.remove("spin");
-
-let r=Math.random()<0.5?"heads":"tails";
-
-if(r===c){
-money+=bet*multi;
-}else{
-money-=bet;
-}
-
-update();
-},600);
-}
-
-/* BLACKJACK */
-let bj={p:[],d:[],bet:0};
-
-function card(){return Math.floor(Math.random()*10)+1;}
-
-function renderBJ(){
-bjEl.innerHTML="P:"+bj.p.join(",")+" | D:"+bj.d[0];
-}
-
-function bjDeal(){
-bj.bet=+bet2.value;
-bj.p=[card(),card()];
-bj.d=[card(),card()];
-renderBJ();
-}
-
-function bjHit(){
-bj.p.push(card());
-renderBJ();
-}
-
-function bjStand(){
-while(bj.d.reduce((a,b)=>a+b,0)<17){
-bj.d.push(card());
-}
-
-let p=bj.p.reduce((a,b)=>a+b,0);
-let d=bj.d.reduce((a,b)=>a+b,0);
-
-if(p>21|| (d<=21&&d>=p)){
-money-=bj.bet;
-}else{
-money+=bj.bet*multi;
-}
-
-update();
-}
-
-/* POKER */
-let ph=[],ai=[];
-
-function pokerDeal(){
-ph=[card(),card(),card(),card(),card()];
-ai=[card(),card(),card(),card(),card()];
-renderPoker();
-}
-
-function pokerDraw(){
-ph[Math.floor(Math.random()*5)]=card();
-renderPoker();
-}
-
-function pokerFold(){
-money-=+bet3.value;
-update();
-}
-
-function renderPoker(){
-phand.innerHTML=ph.map(x=>`<div class='card'>${x}</div>`).join("");
-aiphand.innerHTML=ai.map(x=>`<div class='card'>${x}</div>`).join("");
-}
-
-/* BALL BATTLE (PHYSICS) */
-let ctx=c.getContext("2d");
-
-let balls=[];
-
-function startBattle(){
-balls=[
-{x:50,y:100,vx:2,vy:1},
-{x:250,y:100,vx:-2,vy:-1}
-];
-
-requestAnimationFrame(loop);
-}
-
-function loop(){
-ctx.clearRect(0,0,300,200);
-
-balls.forEach(b=>{
-b.x+=b.vx;
-b.y+=b.vy;
-
-if(b.x<0||b.x>300)b.vx*=-1;
-if(b.y<0||b.y>200)b.vy*=-1;
-
-ctx.beginPath();
-ctx.arc(b.x,b.y,10,0,Math.PI*2);
-ctx.fill();
-});
-
-requestAnimationFrame(loop);
-}
-
-/* INIT */
-update();
-</script>
+<script src="game.js"></script>
 
 </body>
 </html>
