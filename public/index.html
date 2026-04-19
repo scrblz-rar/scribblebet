@@ -329,6 +329,42 @@ function fold(){
 
 update();
 </script>
+    <script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+/* JOIN BLACKJACK */
+socket.emit("bj_join");
+
+/* ACTIONS */
+function hit(){
+  socket.emit("bj_hit");
+}
+
+function stand(){
+  socket.emit("bj_stand");
+}
+
+function bet(){
+  socket.emit("bj_bet", +document.getElementById("bet2").value);
+}
+
+function log(msg){
+  socket.emit("feed", msg);
+}
+
+/* FEED */
+socket.on("feed", (f) => {
+  let box = document.getElementById("feed");
+  if(!box) return;
+  box.innerHTML = "";
+  f.forEach(x=>{
+    let d=document.createElement("div");
+    d.innerText=x;
+    box.appendChild(d);
+  });
+});
+</script>
 
 </body>
 </html>
