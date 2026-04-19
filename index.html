@@ -3,377 +3,44 @@
 <head>
 <title>scribble.bet</title>
 
-<!-- FONT -->
 <link href="https://fonts.googleapis.com/css2?family=Lexend+Giga&display=swap" rel="stylesheet">
-
-<style>
-body {
-    margin:0;
-    font-family:'Lexend Giga', sans-serif;
-    color:black;
-    text-align:center;
-    background:white;
-    overflow-x:hidden;
-    padding-top:30px;
-}
-
-/* 🌐 FIXED SEAMLESS BACKGROUND */
-body::before {
-    content:"";
-    position:fixed;
-    inset:0;
-    background-image: repeating-linear-gradient(
-        135deg,
-        rgba(0,0,0,0.04) 0px,
-        rgba(0,0,0,0.04) 18px,
-        transparent 18px,
-        transparent 40px
-    );
-    animation:bgmove 40s linear infinite;
-    z-index:-1;
-}
-
-@keyframes bgmove {
-    0% { transform: translate3d(0,0,0); }
-    100% { transform: translate3d(-80px,-80px,0); }
-}
-
-/* 📺 CASINO TICKER */
-#ticker {
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    background:black;
-    color:white;
-    font-size:12px;
-    padding:6px 0;
-    overflow:hidden;
-    white-space:nowrap;
-    z-index:999;
-}
-
-#ticker span {
-    display:inline-block;
-    padding-left:100%;
-    animation:tickerMove 18s linear infinite;
-}
-
-@keyframes tickerMove {
-    0% { transform:translateX(0); }
-    100% { transform:translateX(-100%); }
-}
-
-/* UI */
-.box {
-    background:rgba(255,255,255,0.95);
-    border:1px solid black;
-    margin:15px auto;
-    padding:15px;
-    width:360px;
-    box-shadow:0 0 10px rgba(0,0,0,0.2);
-    border-radius:10px;
-}
-
-/* BUTTONS */
-button {
-    background:white;
-    color:black;
-    border:1px solid black;
-    cursor:pointer;
-    font-family:inherit;
-}
-button:hover {
-    box-shadow:0 0 8px rgba(0,0,0,0.4);
-}
-
-/* CARDS */
-.card {
-    display:inline-block;
-    width:50px;
-    height:70px;
-    line-height:70px;
-    margin:4px;
-    background:black;
-    color:white;
-    border-radius:6px;
-}
-
-/* FEED */
-#feed {
-    font-size:12px;
-    text-align:left;
-    max-height:120px;
-    overflow:auto;
-    border-top:1px solid #ccc;
-    margin-top:10px;
-    padding-top:10px;
-}
-.feedItem { margin:3px 0; opacity:0.8; }
-
-.coin { font-size:40px; }
-.spin { animation:spin .6s; }
-
-@keyframes spin {
-    from{transform:rotateY(0)}
-    to{transform:rotateY(720deg)}
-}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- 📺 TICKER -->
-<div id="ticker">
-    <span id="tickerText">🎰 scribble.bet live casino • blackjack tables open • poker running • coin flips active • good luck gamblers 🎲</span>
-</div>
+<div id="ticker"><span id="tickerText">🎰 scribble.bet roguelike casino running...</span></div>
 
-<h1>🖊 scribble.bet</h1>
+<h1>scribble.bet</h1>
 
 <div class="box">
-<p>Player: <span id="name"></span></p>
-<p>Points: <span id="points"></span></p>
+    <p>Money: <span id="money"></span></p>
+    <p>Luck: <span id="luck"></span></p>
+    <p>Multiplier: <span id="mult"></span></p>
 </div>
 
-<!-- FEED -->
 <div class="box">
-<h3>Live Wins Feed</h3>
-<div id="feed"></div>
+    <h3>Gamble</h3>
+    <input id="bet" type="number">
+    <button onclick="gamble()">Spin</button>
 </div>
 
-<!-- COIN -->
 <div class="box">
-<h3>Coin Flip</h3>
-<input id="bet1" type="number">
-<div id="coin" class="coin">🪙</div><br>
-<button onclick="coin('heads')">Heads</button>
-<button onclick="coin('tails')">Tails</button>
+    <h3>AI Ball Battle</h3>
+    <input id="ballBet" type="number">
+    <button onclick="ballBattle()">Bet on AI Fight</button>
 </div>
 
-<!-- BLACKJACK -->
 <div class="box">
-<h3>Blackjack</h3>
-<input id="bet2" type="number"><br>
-<button onclick="startBJ()">Deal</button>
-<button onclick="hit()">Hit</button>
-<button onclick="stand()">Stand</button>
-
-<p id="bjRes"></p>
+    <h3>Shop</h3>
+    <div id="shop"></div>
 </div>
 
-<!-- POKER -->
 <div class="box">
-<h3>Poker (Raise System)</h3>
-<input id="bet3" type="number"><br>
-
-<button onclick="dealPoker()">Deal</button>
-<button onclick="pokerHit()">Hit (Draw)</button>
-<button onclick="raise()">Raise</button>
-<button onclick="standPoker()">Stand</button>
-<button onclick="fold()">Fold</button>
-
-<p>You:</p>
-<div id="pHand"></div>
-
-<p>AI:</p>
-<div id="aHand"></div>
-
-<p id="pokerRes"></p>
+    <h3>Run Log</h3>
+    <div id="log"></div>
 </div>
 
-<script>
-let username = "scribbler_" + Math.floor(Math.random()*9999);
-document.getElementById("name").innerText = username;
-
-let player = JSON.parse(localStorage.getItem("p_"+username)) || {points:1000};
-let feed = JSON.parse(localStorage.getItem("feed")||"[]");
-
-/* SAVE */
-function save(){
-    localStorage.setItem("p_"+username, JSON.stringify(player));
-    localStorage.setItem("feed", JSON.stringify(feed));
-}
-
-/* UPDATE */
-function update(){
-    document.getElementById("points").innerText = player.points;
-    renderFeed();
-    save();
-}
-
-/* FEED */
-function addFeed(msg){
-    feed.unshift(msg);
-    feed = feed.slice(0,15);
-    renderFeed();
-}
-
-function renderFeed(){
-    let f=document.getElementById("feed");
-    f.innerHTML="";
-    feed.forEach(x=>{
-        let d=document.createElement("div");
-        d.className="feedItem";
-        d.innerText=x;
-        f.appendChild(d);
-    });
-}
-
-/* TICKER (LIVE) */
-function updateTicker(){
-    let msgs = [
-        "🎰 High stakes blackjack running",
-        "🃏 Poker table heating up",
-        "💰 Big win detected in lobby",
-        "🎲 Coin flip streak active",
-        "🔥 Players pushing all-in",
-        "📈 Casino economy rising"
-    ];
-    document.getElementById("tickerText").innerText =
-        msgs[Math.floor(Math.random()*msgs.length)];
-}
-setInterval(updateTicker, 5000);
-
-/* COIN */
-function coin(choice){
-    let bet=+bet1.value;
-    if(bet>player.points) return;
-
-    let c=document.getElementById("coin");
-    c.classList.add("spin");
-
-    setTimeout(()=>{
-        c.classList.remove("spin");
-        let r=Math.random()<0.5?"heads":"tails";
-
-        if(r===choice){
-            player.points+=bet;
-            addFeed(username+" won "+bet+" on coin flip");
-        } else {
-            player.points-=bet;
-        }
-
-        update();
-    },600);
-}
-
-/* BLACKJACK */
-let bj={};
-
-function card(){ return Math.floor(Math.random()*10)+1; }
-function sum(a){ return a.reduce((x,y)=>x+y,0); }
-
-function startBJ(){
-    let bet=+bet2.value;
-    if(bet>player.points) return;
-
-    bj={bet,player:[card(),card()],dealer:[card(),card()],active:true};
-    document.getElementById("bjRes").innerText="";
-}
-
-function hit(){
-    if(!bj.active) return;
-    bj.player.push(card());
-
-    if(sum(bj.player)>21){
-        player.points-=bj.bet;
-        bj.active=false;
-        document.getElementById("bjRes").innerText="Bust";
-        update();
-    }
-}
-
-function stand(){
-    if(!bj.active) return;
-
-    while(sum(bj.dealer)<17){
-        bj.dealer.push(card());
-    }
-
-    let p=sum(bj.player), d=sum(bj.dealer);
-
-    if(d>21 || p>d){
-        player.points+=bj.bet;
-        addFeed(username+" won "+bj.bet+" on blackjack");
-        document.getElementById("bjRes").innerText="Win";
-    } else {
-        player.points-=bj.bet;
-        document.getElementById("bjRes").innerText="Lose";
-    }
-
-    bj.active=false;
-    update();
-}
-
-/* POKER */
-let poker={};
-
-function hand(){
-    return [card(),card(),card(),card(),card()];
-}
-
-function val(h){
-    return h.reduce((a,b)=>a+b,0);
-}
-
-function show(id,h){
-    document.getElementById(id).innerHTML =
-        h.map(x=>`<div class="card">${x}</div>`).join("");
-}
-
-function dealPoker(){
-    let bet=+bet3.value;
-    if(bet>player.points) return;
-
-    poker={bet,p:hand(),ai:hand(),active:true};
-
-    show("pHand",poker.p);
-    show("aHand",poker.ai);
-    document.getElementById("pokerRes").innerText="";
-}
-
-function pokerHit(){
-    if(!poker.active) return;
-    let i=Math.floor(Math.random()*poker.p.length);
-    poker.p[i]=card();
-    show("pHand",poker.p);
-}
-
-function raise(){
-    if(!poker.active) return;
-    poker.bet += 10;
-}
-
-function standPoker(){
-    if(!poker.active) return;
-
-    let p=val(poker.p);
-    let a=val(poker.ai);
-
-    if(p>a){
-        player.points+=poker.bet;
-        addFeed(username+" won "+poker.bet+" on poker");
-        document.getElementById("pokerRes").innerText="Win";
-    } else {
-        player.points-=poker.bet;
-        document.getElementById("pokerRes").innerText="Lose";
-    }
-
-    poker.active=false;
-    update();
-}
-
-function fold(){
-    if(!poker.active) return;
-
-    player.points-=poker.bet;
-    poker.active=false;
-    document.getElementById("pokerRes").innerText="Folded";
-    update();
-}
-
-update();
-</script>
-
+<script src="game.js"></script>
 </body>
 </html>
