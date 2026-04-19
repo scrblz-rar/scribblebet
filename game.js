@@ -1,236 +1,223 @@
-/* =========================
-SAVE
-========================= */
 
-let save =
-JSON.parse(localStorage.getItem("scribble")) || {
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
 
-money: 500,
-
-unlocked: ["sword"],
-
-level: 1
-
+const ui = {
+weapon: document.getElementById("weapon"),
+money: document.getElementById("money"),
+upgrade: document.getElementById("upgradeScreen"),
+fight: document.getElementById("fightScreen")
 };
 
-/* =========================
-WEAPONS (FULL SYSTEM)
-========================= */
+let save = {
+money: 500,
+level: 1,
+unlocked: ["sword"]
+};
+
+/* ================= WEAPONS ================= */
 
 const weapons = {
 
-/* Tier 0 */
-
 sword: {
-tier: 0,
-emoji: "🗡️",
-type: "orbit",
-damage: 2,
-range: 25,
-
-onDamageTaken(b) {
-if (Math.random() < 0.25)
-b.damageMult += 0.5;
-}
-
+emoji:"🗡️",
+type:"orbit",
+dmg:2,
+range:25,
+onHit(b){ if(Math.random()<0.2) b.damageMult = 1.5; }
 },
 
 spear: {
-tier: 0,
-emoji: "🔱",
-type: "orbit",
-damage: 1,
-range: 40,
-
-onEquip(b) {
-b.rangeBoost = 2;
-}
-
+emoji:"🔱",
+type:"orbit",
+dmg:1,
+range:40
 },
 
 shield: {
-tier: 0,
-emoji: "🛡️",
-type: "orbit",
-damage: 1,
-
-onDamageTaken(b) {
-b.resist = Math.min(0.5, (b.resist || 0) + 0.1);
+emoji:"🛡️",
+type:"orbit",
+dmg:1,
+onHit(b){
+b.resist = Math.min(0.5,(b.resist||0)+0.1);
 }
-
 },
 
-/* Tier 1 */
-
 unarmed: {
-tier: 1,
-emoji: "👊",
-type: "body",
-damage: 1,
-
-onHit(b) {
-b.vx *= 1.15;
-b.vy *= 1.15;
+emoji:"👊",
+type:"body",
+dmg:1,
+onHit(b){
+let spd = Math.hypot(b.vx,b.vy);
+b.dmgBonus = spd*0.3;
 }
-
 },
 
 scythe: {
-tier: 1,
-emoji: "☠️",
-type: "orbit",
-damage: 1,
-
-onHit(b, e) {
-e.poison = (e.poison || 0) + 3;
+emoji:"☠️",
+type:"orbit",
+dmg:1,
+onHit(b,e){
+e.poison = (e.poison||0) + 2;
 }
 },
 
-/* Tier 2 */
-
 lance: {
-tier: 2,
-emoji: "📏",
-type: "lunge",
-damage: 5,
-cd: 3
+emoji:"📏",
+type:"dash",
+dmg:5,
+cd:2
 },
 
 mace: {
-tier: 2,
-emoji: "🔨",
-type: "orbit",
-damage: 1
+emoji:"🔨",
+type:"orbit",
+dmg:1
 },
 
-/* Tier 3 */
-
 shotgun: {
-tier: 3,
-emoji: "🔫",
-type: "projectile",
-pellets: 5,
-damage: 1
+emoji:"🔫",
+type:"gun",
+pellets:5,
+dmg:1
 },
 
 statue: {
-tier: 3,
-emoji: "🗿",
-type: "stone",
-damage: 10
+emoji:"🗿",
+type:"transform",
+dmg:10
 },
 
-/* Tier 4 */
-
 vampire: {
-tier: 4,
-emoji: "🧛",
-type: "projectile",
-damage: 2,
-lifesteal: true
+emoji:"🧛",
+type:"gun",
+dmg:2,
+lifesteal:true
 }
 
 };
 
-/* =========================
-BALL
-========================= */
+/* ================= BALL ================= */
 
 class Ball {
 
-constructor(x,y,w) {
+constructor(x,y,w,isPlayer){
 
 this.x=x;
 this.y=y;
 
-this.vx=(Math.random()-0.5)*5;
-this.vy=(Math.random()-0.5)*5;
+this.vx=(Math.random()-0.5)*4;
+this.vy=(Math.random()-0.5)*4;
 
-this.weapon=weapons[w];
+this.weapon=w;
+this.isPlayer=isPlayer;
 
-this.hp=100+save.level*25;
+this.hp=100+save.level*20;
 
-this.weaponAngle=0;
+this.angle=0;
 
 this.poison=0;
-
 this.resist=0;
+
+this.dashCD=0;
+this.stoneTimer=0;
+this.stone=false;
 
 this.damageMult=1;
 
-this.rangeBoost=0;
-
-this.lungeCD=0;
-
-this.stone=false;
-
 }
 
-update() {
+update(){
 
 /* gravity */
-
 this.vy += 0.25;
 
 /* poison tick */
+if(this.poison>0 && !this.stone){
+this.hp -= this.poison*0.02;
+this.poison -= 0.05;
+}
 
-if(this.poison>0){
+/* dash cooldown */
+if(this.dashCD>0) this.dashCD--;
 
-this.hp -= 0.2;
-this.poison -= 0.1;
+/* statue transform cycle */
+if(this.weapon==="statue"){
+
+this.stoneTimer++;
+
+if(this.stoneTimer>180){
+
+this.stone = !this.stone;
+
+this.stoneTimer=0;
+
+if(!this.stone){
+
+/* slam damage */
+enemy.hp -= 15;
+
+}
+
+}
 
 }
 
 /* movement */
 
-this.x+=this.vx;
-this.y+=this.vy;
+if(!this.stone){
+
+this.x += this.vx;
+this.y += this.vy;
+
+}
 
 /* bounce */
 
 if(this.x<20||this.x>780)this.vx*=-1;
 
-if(this.y>480){
-
-this.y=480;
+if(this.y>430){
+this.y=430;
 this.vy*=-0.8;
-
 }
 
-/* stone mode */
-
+/* stone fall heavy */
 if(this.stone){
-
-this.hp -= -0.05; // invincible vibe
+this.vx*=0.98;
+this.vy+=0.3;
 }
 
-this.weaponAngle+=0.1;
+this.angle+=0.1;
 
 }
 
-draw(ctx){
+/* draw */
+
+draw(){
 
 ctx.beginPath();
 ctx.arc(this.x,this.y,15,0,Math.PI*2);
-ctx.fillStyle="black";
+ctx.fillStyle=this.isPlayer?"blue":"red";
 ctx.fill();
 
-this.drawWeapon(ctx);
+this.drawWeapon();
 
 }
 
-drawWeapon(ctx){
+/* weapon visuals */
 
-let w=this.weapon;
+drawWeapon(){
+
+let w=weapons[this.weapon];
 
 if(w.type==="orbit"){
 
-let r=w.range+(this.rangeBoost||0);
+let r=w.range;
 
 ctx.fillText(
 w.emoji,
-this.x+Math.cos(this.weaponAngle)*r,
-this.y+Math.sin(this.weaponAngle)*r
+this.x+Math.cos(this.angle)*r,
+this.y+Math.sin(this.angle)*r
 );
 
 }
@@ -239,83 +226,92 @@ this.y+Math.sin(this.weaponAngle)*r
 
 }
 
-/* =========================
-PROJECTILES
-========================= */
+/* ================= PROJECTILES ================= */
 
 let projectiles=[];
 
-function shoot(b,target){
+function shoot(a,b){
 
-let dx=target.x-b.x;
-let dy=target.y-b.y;
+let dx=b.x-a.x;
+let dy=b.y-a.y;
 
-let d=Math.sqrt(dx*dx+dy*dy);
+let d=Math.hypot(dx,dy);
 
 let vx=(dx/d)*6;
 let vy=(dy/d)*6;
 
-let w=b.weapon;
+let w=weapons[a.weapon];
 
-/* shotgun */
+if(w.type==="gun"){
 
-if(w.emoji==="🔫"){
-
-for(let i=0;i<w.pellets;i++){
+for(let i=0;i<(w.pellets||1);i++){
 
 projectiles.push({
-x:b.x,
-y:b.y,
+x:a.x,
+y:a.y,
 vx:vx+(Math.random()-0.5)*2,
 vy:vy+(Math.random()-0.5)*2,
-owner:b
+owner:a,
+dmg:w.dmg
 });
 
 }
 
 return;
-
 }
 
 projectiles.push({
-x:b.x,
-y:b.y,
+x:a.x,
+y:a.y,
 vx,
 vy,
-owner:b
+owner:a,
+dmg:w.dmg
 });
 
 }
 
-/* =========================
-GAME
-========================= */
+/* ================= ENEMY AI ================= */
 
-let canvas=document.getElementById("arena");
-let ctx=canvas.getContext("2d");
+function enemyAI(){
 
-let p,e;
+let dx = p.x - e.x;
+let dy = p.y - e.y;
 
-function startFight(){
+let d = Math.hypot(dx,dy);
 
-p=new Ball(100,200,weaponSelect.value);
-e=new Ball(700,200,random());
+e.vx += (dx/d)*0.05;
+e.vy += (dy/d)*0.05;
 
-fight();
+if(Math.random()<0.02){
+shoot(e,p);
+}
 
 }
 
-/* enemy tier */
+/* ================= DASH (LANCE) ================= */
 
-function random(){
+function useDash(b,target){
 
-let keys=Object.keys(weapons);
+if(b.weapon!=="lance") return;
 
-return keys[Math.floor(Math.random()*keys.length)];
+if(b.dashCD>0) return;
+
+let dx=target.x-b.x;
+let dy=target.y-b.y;
+
+let d=Math.hypot(dx,dy);
+
+b.vx += (dx/d)*8;
+b.vy += (dy/d)*8;
+
+target.hp -= 12;
+
+b.dashCD = 120;
 
 }
 
-/* collision */
+/* ================= COLLISION ================= */
 
 function hit(a,b){
 
@@ -323,28 +319,43 @@ return Math.hypot(a.x-b.x,a.y-b.y)<18;
 
 }
 
-/* loop */
+/* ================= GAME ================= */
 
-function fight(){
+let p,e;
+
+function beginFight(){
+
+p=new Ball(100,200,ui.weapon.value,true);
+e=new Ball(700,200,"sword",false);
+
+loop();
+
+}
+
+/* ================= LOOP ================= */
+
+function loop(){
 
 ctx.clearRect(0,0,800,500);
+
+enemyAI();
 
 p.update();
 e.update();
 
-p.draw(ctx);
-e.draw(ctx);
+p.draw();
+e.draw();
+
+/* dash if lance */
+if(Math.random()<0.01){
+useDash(p,e);
+}
 
 /* shoot */
-
-if(Math.random()<0.03)shoot(p,e);
-if(Math.random()<0.03)shoot(e,p);
+if(Math.random()<0.03) shoot(p,e);
 
 /* projectiles */
-
-for(let i=0;i<projectiles.length;i++){
-
-let pr=projectiles[i];
+for(let pr of projectiles){
 
 pr.x+=pr.vx;
 pr.y+=pr.vy;
@@ -353,57 +364,78 @@ ctx.fillText("•",pr.x,pr.y);
 
 if(hit(pr,p)&&pr.owner!==p){
 
-p.hp-=2;
-
-if(e.weapon.lifesteal)e.hp+=1;
+p.hp -= pr.dmg*(1 - (p.resist||0));
 
 }
 
 if(hit(pr,e)&&pr.owner!==e){
 
-e.hp-=2;
-
-if(p.weapon.lifesteal)p.hp+=1;
+e.hp -= pr.dmg*(1 - (e.resist||0));
 
 }
 
+/* lifesteal */
+if(pr.owner.weapon==="vampire"){
+pr.owner.hp += 0.5;
+}
+
+}
+
+/* poison scaling death */
+if(e.poison>5){
+e.hp -= 0.1;
 }
 
 /* win */
-
 if(e.hp<=0){
 
-save.money+=100;
+save.money += 100;
 save.level++;
-
-localStorage.setItem("scribble",JSON.stringify(save));
 
 return;
 
 }
 
 /* lose */
+if(p.hp<=0) return;
 
-if(p.hp<=0)return;
-
-requestAnimationFrame(fight);
-
-}
-
-/* =========================
-UI
-========================= */
-
-function goToFight(){
-
-upgradeScreen.classList.add("hidden");
-fightScreen.classList.remove("hidden");
+requestAnimationFrame(loop);
 
 }
 
-function returnToUpgrade(){
+/* ================= UI ================= */
 
-fightScreen.classList.add("hidden");
-upgradeScreen.classList.remove("hidden");
+function startFight(){
+
+ui.upgrade.classList.add("hidden");
+ui.fight.classList.remove("hidden");
 
 }
+
+function back(){
+
+ui.fight.classList.add("hidden");
+ui.upgrade.classList.remove("hidden");
+
+}
+
+function update(){
+
+ui.money.innerText="Money: "+save.money;
+
+ui.weapon.innerHTML="";
+
+save.unlocked.forEach(w=>{
+
+let o=document.createElement("option");
+
+o.value=w;
+o.textContent=weapons[w].emoji+" "+w;
+
+ui.weapon.appendChild(o);
+
+});
+
+}
+
+update();
